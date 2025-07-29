@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+    <section class="hero-wrap hero-wrap-2" style="background-image: url('{% static 'images/bg_1.jpg' %}');" data-stellar-background-ratio="0.5">
+      <div class="overlay"></div>
+      <div class="container">
+        <div class="row no-gutters slider-text align-items-center justify-content-center">
+          <div class="col-md-9 ftco-animate text-center">
+            <h1 class="mb-2 bread">Our Highlights</h1>
+            <p class="breadcrumbs"><span class="mr-2"><a href="{% url 'home' %}">Home <i class="ion-ios-arrow-forward"></i></a></span> <span>Highlights <i class="ion-ios-arrow-forward"></i></span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ftco-section">
+        <div class="container">
+            <div class="row justify-content-center mb-5 pb-2">
+                <div class="col-md-8 text-center heading-section ftco-animate">
+                    <span class="subheading">Excellence in Care</span>
+                    <h2 class="mb-4">Spotlighting Our Advanced Services & Achievements</h2>
+                    <p>At Care Medicity, we are constantly pushing the boundaries of medical care. Explore some of our key advancements and areas of specialized expertise.</p>
+                </div>
+            </div>
+
+            <div class="row">
+                {# Highlight Item 1: Specialized Surgery Example #}
+                <div class="col-md-6 ftco-animate">
+                    <div class="blog-entry align-self-stretch d-flex">
+                        <a href="#" class="block-20" style="background-image: url('{% static 'images/highlight_surgery.jpg' %}');">
+                        </a>
+                        <div class="text p-4 d-block">
+                            <h3 class="heading mt-3"><a href="#">Pioneering Robotic-Assisted Surgery</a></h3>
+                            <div class="meta mb-3">
+                                <div><span class="icon-calendar"></span> Advanced Technology</div>
+                                <div><span class="icon-heart"></span> Minimally Invasive</div>
+                            </div>
+                            <p>Our state-of-the-art robotic surgery system allows for greater precision, smaller incisions, reduced pain, and faster recovery times for complex procedures across various specialties. Patients benefit from superior outcomes and quicker return to daily life.</p>
+
+                        </div>
+                    </div>
+                </div>
+
+                {# Highlight Item 2: Advanced Diagnostic Example #}
+                <div class="col-md-6 ftco-animate">
+                    <div class="blog-entry align-self-stretch d-flex">
+                        <a href="#" class="block-20" style="background-image: url('{% static 'images/highlight_diagnostic.jpg' %}');">
+                        </a>
+                        <div class="text p-4 d-block">
+                            <h3 class="heading mt-3"><a href="#">High-Resolution 3T MRI Diagnostics</a></h3>
+                            <div class="meta mb-3">
+                                <div><span class="icon-calendar"></span> Cutting-Edge Imaging</div>
+                                <div><span class="icon-eye"></span> Unrivaled Clarity</div>
+                            </div>
+                            <p>Experience unparalleled diagnostic accuracy with our new 3 Tesla MRI scanner. Its enhanced magnetic field provides incredibly detailed images of organs, soft tissues, bone, and virtually all other internal body structures, leading to more precise diagnoses and tailored treatment plans.</p>
+
+                        </div>
+                    </div>
+                </div>
+
+                {# Highlight Item 3: Patient Success Story Example (Adapt to your needs) #}
+                <div class="col-md-6 ftco-animate">
+                    <div class="blog-entry align-self-stretch d-flex">
+                        <a href="#" class="block-20" style="background-image: url('{% static 'images/highlight_patient_story.jpg' %}');">
+                        </a>
+                        <div class="text p-4 d-block">
+                            <h3 class="heading mt-3"><a href="#">Transforming Lives: A Patient's Journey</a></h3>
+                            <div class="meta mb-3">
+                                <div><span class="icon-calendar"></span> Personalized Care</div>
+                                <div><span class="icon-user"></span> Inspiring Recovery</div>
+                            </div>
+                            <p>Discover how our integrated approach to cardiac care, combining expert surgery with dedicated rehabilitation, helped [Patient's Name/Anonymous] regain full health and vitality. Their story is a testament to our commitment to comprehensive patient support.</p>
+
+                        </div>
+                    </div>
+                </div>
+
+                {# Highlight Item 4: Community Program Example (Adapt to your needs) #}
+                <div class="col-md-6 ftco-animate">
+                    <div class="blog-entry align-self-stretch d-flex">
+                        <a href="#" class="block-20" style="background-image: url('{% static 'images/highlight_community.jpg' %}');">
+                        </a>
+                        <div class="text p-4 d-block">
+                            <h3 class="heading mt-3"><a href="#">Community Health & Wellness Initiatives</a></h3>
+                            <div class="meta mb-3">
+                                <div><span class="icon-calendar"></span> Community Outreach</div>
+                                <div><span class="icon-users"></span> Healthy Living</div>
+                            </div>
+                            <p>Beyond treatment, Care Medicity is dedicated to promoting public health. Learn about our free health screenings, wellness workshops, and educational seminars designed to empower our community to lead healthier lives.</p>
+
+                        </div>
+                    </div>
+                </div>
+     </section>
+
+{% endblock %}

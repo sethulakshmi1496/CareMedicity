@@ -1,0 +1,220 @@
+[
+  {
+    "tag": "greeting",
+    "patterns": [
+      "hi", "hello", "hey", "good morning", "good afternoon", "good evening",
+      "greetings", "hi there", "hello bot", "hey chatbot", "namaste", "good day",
+      "hi bot", "hey there", "hai there"
+    ],
+    "responses": [
+      "Greetings! How can I assist you?",
+      "Greetings! How can I assist you?",
+      "Hello! How can I help you today at Care Medicity?",
+      "Hi there! What can I do for you?",
+      "Hello! Welcome to Care Medicity chatbot."
+    ]
+  },
+  {
+    "tag": "farewell",
+    "patterns": [
+      "bye", "goodbye", "see you", "thank you, goodbye", "cheers", "bye bye",
+      "talk to you later", "thanks bye", "good night", "gotta go", "farewell"
+    ],
+    "responses": [
+      "Goodbye!", "See you soon!", "Take care!", "Farewell!", "Have a great day!"
+    ]
+  },
+  {
+    "tag": "thanks",
+    "patterns": [
+      "thank you", "thanks", "thank you so much", "thanks a lot", "appreciate it",
+      "you're great", "cheers", "thanks for your help", "i appreciate your help"
+    ],
+    "responses": [
+      "You're welcome!",
+      "My pleasure!",
+      "Happy to help!",
+      "Anytime!",
+      "Glad I could assist!"
+    ]
+  },
+  {
+    "tag": "hospital_address",
+    "patterns": [
+      "where are you located", "address", "your location", "find you",
+      "where is Care Medicity", "hospital address", "what is your address",
+      "how to get to the hospital", "directions to Care Medicity", "where can I find you",
+      "your location please", "hospital's location"
+    ],
+    "responses": [
+      "Care Medicity is located at MG Road, Kochin, Ernakulam, Kerala."
+    ]
+  },
+  {
+    "tag": "hospital_contact",
+    "patterns": [
+      "contact number", "phone number", "call you", "email address", "contact us",
+      "how can I contact you", "what's your phone", "send email", "customer service number",
+      "how to reach you", "can I call you", "what is your email", "contact details"
+    ],
+    "responses": [
+      "You can call us at +1235235598 or email us at CareMedicity@gmail.com."
+    ]
+  },
+  {
+    "tag": "operating_hours",
+    "patterns": [
+      "What are your hours?", "When are you open?", "Operating times",
+      "Hospital timings", "What time do you close?", "When do you open?",
+      "Are you open 24/7?", "Emergency hours", "What are the clinic hours?",
+      "timings", "working hours", "emergency care", "consultation time",
+      "consultation timing", "appointment time", "when can I consult a doctor"
+    ],
+    "responses": [
+      "Our emergency care is 24/7. Outpatient services are typically 9 AM to 5 PM, Monday to Saturday. Specific department hours may vary."
+    ]
+  },
+  {
+    "tag": "consultation_fee",
+    "patterns": [
+      "What's the consultation fee?", "How much does a doctor's visit cost?",
+      "Cost of consultation", "Doctor fees", "How much for an appointment?",
+      "What's the charge for a consultation?", "consultation charges",
+      "how much does a consultation cost"
+    ],
+    "responses": [
+      "The standard consultation fee is ₹500. Payments can be made online or at the hospital."
+    ]
+  },
+  {
+    "tag": "about_hospital",
+    "patterns": [
+      "Tell me about Care Medicity", "What is Care Medicity?", "About your hospital",
+      "What kind of hospital are you?", "History of Care Medicity", "Your mission",
+      "About your facility", "What do you stand for?", "mission of hospital",
+      "about the hospital", "about"
+    ],
+    "responses": [
+      "Care Medicity is a leading healthcare institution dedicated to providing comprehensive and compassionate medical services. We focus on patient-centric care using advanced medical technologies and a multidisciplinary approach. Our mission is to bring hope and a smile to every patient we serve by delivering exceptional healthcare."
+    ]
+  },
+  {
+    "tag": "about_bot",
+    "patterns": [
+      "What can you do?", "Tell me about yourself.", "Are you a human?", "Who are you?",
+      "What's your purpose?", "Are you an AI?", "How old are you?", "What is your function?",
+      "Are you a robot?", "what are your capabilities", "your functions", "about you"
+    ],
+    "responses": [
+      "I am a chatbot designed to assist you with information about Care Medicity, including departments, doctors, services, and appointments.",
+      "I'm your virtual assistant at Care Medicity, here to help with common questions.",
+      "I am an AI, not a human. I'm here to provide information about the hospital."
+    ]
+  },
+  {
+    "tag": "symptom_advice",
+    "patterns": [
+      "I'm feeling sick", "My leg hurts", "I have a fever", "What should I do if I'm sick?",
+      "Symptoms of cough", "My stomach aches", "I feel unwell", "What to do for headache?",
+      "I need medical advice", "Can you diagnose me?", "I have pain in my arm",
+      "my head hurts", "I have a cold", "feeling unwell", "what should I do for my pain",
+      "im having fever", "high fever", "symptoms of fever", "body aches"
+    ],
+    "responses": [
+      "I am a chatbot and cannot provide medical advice or diagnosis. Please consult a doctor or visit our emergency department for any medical concerns. If it's an emergency, please call our emergency line or visit the hospital immediately.",
+      "For accurate diagnosis and treatment, please schedule an appointment with one of our doctors or visit the emergency room.",
+      "If it's an emergency, please call our emergency line or visit the hospital immediately."
+    ]
+  },
+  {
+    "tag": "appointment_query",
+    "patterns": [
+      "book appointment", "make appointment", "schedule appointment", "how to book an appointment",
+      "appointment details", "I want to book a visit", "Can I schedule a consultation?",
+      "Reschedule my appointment", "How do I cancel an appointment?", "What's the process for booking?",
+      "online booking", "I need an appointment", "set up an appointment", "make a booking",
+      "can I make an appointment", "how to schedule", "reschedule appointment", "cancel appointment",
+      "my appointments", "where is my appointments", "check my appointment", "status of my appointment",
+      "view my upcoming appointments"
+    ],
+    "responses": [
+      "You can book an appointment online through our <a href='{reverse('appointment')}' target='_parent'>appointment page</a>. The standard consultation fee is ₹500."
+    ]
+  },
+  {
+    "tag": "user_profile_query",
+    "patterns": [
+      "my profile", "my account", "show my details", "access my info", "what about my record",
+      "can I see my medical history", "my patient portal", "how to create my profile",
+      "how to access my account", "update my information"
+    ],
+    "responses": [
+      "I am an AI chatbot and cannot access your personal profile or appointment details directly for security and privacy reasons. Please log in to your patient portal on our website to view your information."
+    ]
+  },
+  {
+    "tag": "department_query",
+    "patterns": [
+      "list departments", "departments", "what departments do you have", "tell me about departments",
+      "which departments are available", "info on departments", "sections of the hospital",
+      "what's in the [Department Name] department?", "tell me about the Cardiology department",
+      "Do you have a Pediatric department?", "What services does the Oncology department offer?",
+      "I need to visit the Dermatology department.", "Can you tell me more about the Orthopedics department?",
+      "What departments are there for women's health?", "Dental department", "Neurology department",
+      "Ophthalmology department", "Surgical department", "Cardiology section", "Department for heart issues",
+      "about Orthopedics", "info on dental", "List your specialties.", "What are your medical specialties?",
+      "which specialization do you have", "what sections are there"
+    ],
+    "responses": []
+  },
+  {
+    "tag": "doctor_query",
+    "patterns": [
+      "list doctors", "doctors available", "who are your doctors", "find a doctor",
+      "Tell me about a Cardiologist.", "Do you have a doctor specializing in diabetes?",
+      "What's Dr. William Johnson's specialization?", "I want to see a general physician",
+      "Can you tell me about the experience of Dr. Jessica King?",
+      "Is Dr. Emily Ross available?", "Who is Dr. Robert Miller?",
+      "Details about Dr. Emily Ross", "Information on Dr. Michael Davies",
+      "Dr. Jonathan Reed", "Dr. Sarah Chen", "Neurologist details",
+      "Pediatrician info", "Looking for a surgeon", "Find a doctor for my eyes",
+      "cardiologist", "surgeon", "neurologist", "dentist", "ophthalmologist", "general practitioner",
+      "what kind of doctors work here", "tell me about a specific doctor", "doctor for heart",
+      "doctor for brain", "doctor for teeth", "doctor for eyes", "dr. [Doctor's Name]"
+    ],
+    "responses": []
+  },
+  {
+    "tag": "service_query",
+    "patterns": [
+      "what services do you offer", "list services", "tell me about services",
+      "treatments available", "Do you offer emergency services?",
+      "Can I get information on diagnostic services?", "Tell me about your physiotherapy services.",
+      "What treatments are available for fever?", "Do you do blood tests?",
+      "What's involved in a routine check-up?", "About X-rays", "Lab services",
+      "Pharmacy services", "Ambulance service", "OPD services", "What kind of treatments do you provide?",
+      "Diagnostic services", "Emergency room services", "Physiotherapy details", "Blood tests info",
+      "Routine check-up services", "What medical services do you provide?",
+      "What kind of care do you offer?", "list of treatments", "what procedures do you perform",
+      "what are your services"
+    ],
+    "responses": []
+  },
+  {
+    "tag": "fallback",
+    "patterns": [
+      "What's the weather like today?", "Tell me a joke.", "What's the capital of France?",
+      "Can you tell me my future?", "I need a new car.", "random question",
+      "meaning of life", "who created you", "how big is the earth", "what time is it",
+      "do you like pizza", "what is your favorite color", "can you sing", "i am bored",
+      "just chatting", "what's up", "blog", "ok", "cool", "alright"
+    ],
+    "responses": [
+      "I'm sorry, I didn't understand that. Can you please rephrase?",
+      "I'm still learning. Could you try asking in a different way?",
+      "Please try asking a different question.",
+      "For more assistance, please visit our contact page.",
+      "I can help with questions about our hospital, doctors, departments, and services. What are you looking for?"
+    ]
+  }
+]

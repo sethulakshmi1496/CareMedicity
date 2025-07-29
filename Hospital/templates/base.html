@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+{% load static %}
+
+<html lang="en">
+<head>
+    <title>Care Medicity</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,500,600,700%7CRoboto:300,400,500,600,700" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'css/animate.css' %}">
+
+    <link rel="stylesheet" href="{% static 'css/owl.carousel.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/owl.theme.default.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
+
+    <link rel="stylesheet" href="{% static 'css/aos.css' %}">
+
+    <link rel="stylesheet" href="{% static 'css/ionicons.min.css' %}">
+
+    <link rel="stylesheet" href="{% static 'css/bootstrap-datepicker.css' %}">
+    <link rel="stylesheet" href="{% static 'css/jquery.timepicker.css' %}">
+
+    <link rel="stylesheet" href="{% static 'css/flaticon.css' %}">
+    <link rel="stylesheet" href="{% static 'css/icomoon.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    {# --- ADDED: Font Awesome for Chatbot Icons --- #}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        /* Styles for the floating chatbot container */
+        #chat-float-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 350px;
+            height: 500px;
+            border: 1px solid #1abc9c; /* Care Medicity's green/teal color */
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            z-index: 1000;
+            background-color: #fff;
+            display: none;
+            flex-direction: column;
+            resize: both; /* Allows user to resize */
+            min-width: 280px;
+            min-height: 200px;
+        }
+
+        #chat-float-container.chat-open {
+            display: flex;
+        }
+
+        #chat-header {
+            background-color: #1abc9c; /* Care Medicity's green/teal color */
+            color: white;
+            padding: 10px 15px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move; /* Indicates it's draggable */
+        }
+
+        #chat-header h5 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        #chat-buttons button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        #chat-iframe {
+            flex-grow: 1; /* Makes iframe take up remaining space */
+            width: 100%;
+            border: none;
+        }
+
+        #chat-toggle-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #1abc9c; /* Care Medicity's green/teal color */
+            color: white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+            cursor: pointer;
+            z-index: 1001; /* Ensure button is above chat container when closed */
+        }
+    </style>
+
+</head>
+<body>
+
+    {# TOP BAR and LOGO/CONTACT INFO - Based on your provided HTML #}
+    <nav class="navbar py-4 navbar-expand-lg ftco_navbar navbar-light bg-light flex-row">
+        <div class="container">
+           <div class="row no-gutters d-flex align-items-start align-items-center px-3 px-md-0">
+              <div class="col-lg-2 pr-4 align-items-center">
+                 <a class="navbar-brand" href="{% url 'home' %}">Care<span>Medicity</span></a>
+              </div>
+              <div class="col-lg-10 d-none d-md-block">
+                 <div class="row d-flex">
+                    <div class="col-md-4 pr-4 d-flex topper align-items-center">
+                       <div class="icon bg-white mr-2 d-flex justify-content-center align-items-center"><span class="icon-map"></span></div>
+                       <span class="text">Address:MG Road,Kochin,Ernakulam</span>
+                    </div>
+                    <div class="col-md pr-4 d-flex topper align-items-center">
+                       <div class="icon bg-white mr-2 d-flex justify-content-center align-items-center"><span class="icon-paper-plane"></span></div>
+                       <span class="text">Email:CareMedicity@gmail.com</span>
+                    </div>
+                    <div class="col-md pr-4 d-flex topper align-items-center">
+                       <div class="icon bg-white mr-2 d-flex justify-content-center align-items-center"><span class="icon-phone2"></span></div>
+                       <span class="text">Phone: + 1235 2355 98</span>
+                    </div>
+                 </div>
+              </div>
+           </div>
+         </div>
+    </nav>
+
+    {# MAIN NAVIGATION BAR - Combined with dynamic user links #}
+    <nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav"
+                aria-controls="ftco-nav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="oi oi-menu"></span> Menu
+            </button>
+
+            <div class="collapse navbar-collapse" id="ftco-nav">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item active"><a href="{% url 'home' %}" class="nav-link">Home</a></li>
+                    <li class="nav-item"><a href="{% url 'about' %}" class="nav-link">About</a></li>
+                    <li class="nav-item"><a href="{% url 'doctor' %}" class="nav-link">Doctor</a></li>
+                    <li class="nav-item"><a href="{% url 'department' %}" class="nav-link">Departments</a></li>
+                    <li class="nav-item"><a href="{% url 'blog' %}" class="nav-link">Blog</a></li>
+                    <li class="nav-item"><a href="{% url 'contact' %}" class="nav-link">Contact</a></li>
+                </ul>
+
+                {# Login/Register and Make an Appointment Button #}
+                <ul class="navbar-nav ml-auto">
+                    {% if user.is_authenticated %}
+                        {% if user.doctor_profile %}
+                            <li class="nav-item"><a class="nav-link" href="{% url 'doctor_appointments_dashboard' %}">My Appointments</a></li>
+                        {% elif user.patient_profile %}
+                            <li class="nav-item"><a class="nav-link" href="{% url 'my_profile' %}">My Profile</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{% url 'my_appointments' %}">My Appointments</a></li>
+                            <li class="nav-item cta ml-lg-4"><a href="{% url 'appointment' %}" class="nav-link"><span class="icon-heart text-danger mr-2"></span>Make an Appointment</a></li>
+                        {% elif user.is_superuser or user.is_staff %}
+                            <li class="nav-item"><a class="nav-link" href="{% url 'admin:index' %}">Admin Dashboard</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{% url 'all_appointments_dashboard' %}">All Appointments</a></li>
+                        {% else %}
+                            <li class="nav-item"><a class="nav-link" href="{% url 'my_profile' %}">Complete Profile</a></li>
+                            <li class="nav-item cta ml-lg-4"><a href="{% url 'appointment' %}" class="nav-link"><span class="icon-heart text-danger mr-2"></span>Make an Appointment</a></li>
+                        {% endif %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'signout' %}">Logout ({{ user.username }})</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'signup' %}">Register</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'signin' %}">Login</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {# MAIN CONTENT BLOCK #}
+    {% block content %}
+    {% endblock content %}
+
+    {# FOOTER SECTION - Your provided HTML #}
+    <footer class="ftco-footer ftco-bg-dark ftco-section">
+      <div class="container">
+        <div class="row mb-5">
+          <div class="col-md">
+            <div class="ftco-footer-widget mb-5">
+              <h2 class="ftco-heading-2 logo">Care<span>Medicity</span></h2>
+              <p>Care Medicity represents a comprehensive and compassionate healthcare hub. The name combines "Care," highlighting the empathetic, patient-centric approach to medical services, with "Medicity," denoting a modern, integrated, and expansive medical facility or network.</p>
+            </div>
+            <div class="ftco-footer-widget mb-5">
+                <h2 class="ftco-heading-2">Have a Questions?</h2>
+                <div class="block-23 mb-3">
+                  <ul>
+                    <li><span class="icon icon-map-marker"></span><span class="text">MG Road,Kochin,Ernakulam</span></li>
+                    <li><a href="#"><span class="icon icon-phone"></span><span class="text">+2 392 3929 210</span></a></li>
+                    <li><a href="#"><span class="icon icon-envelope"></span><span class="text">CareMedicity@gmail.com</span></a></li>
+                  </ul>
+                </div>
+
+                <ul class="ftco-footer-social list-unstyled float-md-left float-lft mt-3">
+                <li class="ftco-animate"><a href="#"><span class="icon-twitter"></span></a></li>
+                <li class="ftco-animate"><a href="#"><span class="icon-facebook"></span></a></li>
+                <li class="ftco-animate"><a href="#"><span class="icon-instagram"></span></a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-md">
+            <div class="ftco-footer-widget mb-5 ml-md-4">
+              <h2 class="ftco-heading-2">Links</h2>
+              <ul class="list-unstyled">
+                <li><a href="{% url 'home' %}"><span class="ion-ios-arrow-round-forward mr-2"></span>Home</a></li>
+                <li><a href="{% url 'about' %}"><span class="ion-ios-arrow-round-forward mr-2"></span>About</a></li>
+                <li><a href="{% url 'doctor' %}"><span class="ion-ios-arrow-round-forward mr-2"></span>Doctors</a></li>
+                <li><a href="{% url 'department' %}"><span class="ion-ios-arrow-round-forward mr-2"></span>Deparments</a></li>
+                <li><a href="{% url 'contact' %}"><span class="ion-ios-arrow-round-forward mr-2"></span>Contact</a></li>
+              </ul>
+            </div>
+            <div class="ftco-footer-widget mb-5 ml-md-4">
+              <h2 class="ftco-heading-2">Services</h2>
+              <ul class="list-unstyled">
+                <li><a href="{% url 'department' %}"><span class="ion-ios-arrow-round-forward mr-2"></span>Neurology</a></li>
+                <li><a href="{% url 'department' %}"><span class="ion-ios-arrow-round-forward mr-2"></span>Dentist</a></li>
+                <li><a href="{% url 'department' %}"><span class="ion-ios-arrow-round-forward mr-2"></span>Ophthalmology</a></li>
+                <li><a href="{% url 'department' %}"><span class="ion-ios-arrow-round-forward mr-2"></span>Cardiology</a></li>
+                <li><a href="{% url 'department' %}"><span class="ion-ios-arrow-round-forward mr-2"></span>Surgery</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-md">
+            <div class="ftco-footer-widget mb-5">
+              <h2 class="ftco-heading-2">Recent Blog</h2>
+              <div class="block-21 mb-4 d-flex">
+                <a class="blog-img mr-4" style="background-image: url({% static 'images/image_1.jpg' %});"></a>
+                <div class="text">
+                  <h3 class="heading"><a href="#">Even the all-powerful Pointing has no control about</a></h3>
+                  <div class="meta">
+                    <div><a href="#"><span class="icon-calendar"></span> Dec 25, 2018</a></div>
+                    <div><a href="#"><span class="icon-person"></span> Admin</a></div>
+                    <div><a href="#"><span class="icon-chat"></span> 19</a></div>
+                  </div>
+                </div>
+              </div>
+              <div class="block-21 mb-5 d-flex">
+                <a class="blog-img mr-4" style="background-image: url({% static 'images/image_2.jpg' %});"></a>
+                <div class="text">
+                  <h3 class="heading"><a href="#">Even the all-powerful Pointing has no control about</a></h3>
+                  <div class="meta">
+                    <div><a href="#"><span class="icon-calendar"></span> Dec 25, 2018</a></div>
+                    <div><a href="#"><span class="icon-person"></span> Admin</a></div>
+                    <div><a href="#"><span class="icon-chat"></span> 19</a></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md">
+            <div class="ftco-footer-widget mb-5">
+                <h2 class="ftco-heading-2">Opening Hours</h2>
+                <h3 class="open-hours pl-4"><span class="ion-ios-time mr-3"></span>We are open 24/7</h3>
+            </div>
+            <div class="ftco-footer-widget mb-5">
+                <h2 class="ftco-heading-2">Subscribe Us!</h2>
+              <form action="#" class="subscribe-form">
+                <div class="form-group">
+                  <input type="text" class="form-control mb-2 text-center" placeholder="Enter email address">
+                  <input type="submit" value="Subscribe" class="form-control submit px-3">
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12 text-center">
+              <p>Copyright &copy;2025 **Care Medicity**. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+
+  <div id="ftco-loader" class="show fullscreen"><svg class="circular" width="48px" height="48px"><circle class="path-bg" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke="#eeeeee"/><circle class="path" cx="24" cy="24" r="22" fill="none" stroke-width="4" stroke-miterlimit="10" stroke="#F96D00"/></svg></div>
+
+    {# --- ADDED: Floating Chatbot HTML and JavaScript --- #}
+    {# Floating Chatbot Toggle Button #}
+    <div id="chat-toggle-button">
+        <i class="fas fa-comments"></i> {# Font Awesome chat icon #}
+    </div>
+
+    {# Floating Chatbot Container #}
+    <div id="chat-float-container">
+        <div id="chat-header">
+            <h5>Care Medicity Chatbot</h5>
+            <div id="chat-buttons">
+                <button id="minimize-chat" title="Minimize/Maximize"><i class="fas fa-window-minimize"></i></button>
+                <button id="close-chat" title="Close Chat"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        {# Make sure 'chatbot' is a valid URL name in your urls.py #}
+        <iframe id="chat-iframe" src="{% url 'chatbot' %}"></iframe>
+    </div>
+
+  {# JavaScript files #}
+  <script src="{% static 'js/jquery.min.js' %}"></script>
+  <script src="{% static 'js/jquery-migrate-3.0.1.min.js' %}"></script>
+  <script src="{% static 'js/popper.min.js' %}"></script>
+  <script src="{% static 'js/bootstrap.min.js' %}"></script>
+  <script src="{% static 'js/jquery.easing.1.3.js' %}"></script>
+  <script src="{% static 'js/jquery.waypoints.min.js' %}"></script>
+  <script src="{% static 'js/jquery.stellar.min.js' %}"></script>
+  <script src="{% static 'js/owl.carousel.min.js' %}"></script>
+  <script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
+  <script src="{% static 'js/aos.js' %}"></script>
+  <script src="{% static 'js/jquery.animateNumber.min.js' %}"></script>
+  <script src="{% static 'js/bootstrap-datepicker.js' %}"></script>
+  <script src="{% static 'js/jquery.timepicker.min.js' %}"></script>
+  <script src="{% static 'js/scrollax.min.js' %}"></script>
+  <script src="{% static 'js/main.js' %}"></script>
+
+  {# --- ADDED: Chatbot JavaScript --- #}
+  <script>
+    $(document).ready(function() {
+        const chatToggleButton = $('#chat-toggle-button');
+        const chatFloatContainer = $('#chat-float-container');
+        const chatHeader = $('#chat-header');
+        const minimizeChatButton = $('#minimize-chat');
+        const closeChatButton = $('#close-chat');
+        const chatIframe = $('#chat-iframe');
+
+        let isDragging = false;
+        let offsetX, offsetY;
+        let originalHeight, originalWidth;
+        let isMinimized = false;
+
+        // Toggle chatbot visibility
+        chatToggleButton.on('click', function() {
+            chatFloatContainer.toggleClass('chat-open');
+            if (chatFloatContainer.hasClass('chat-open')) {
+                // When opening, ensure it's not minimized
+                chatFloatContainer.css({height: originalHeight || '500px', width: originalWidth || '350px'});
+                chatIframe.show();
+                minimizeChatButton.html('<i class="fas fa-window-minimize"></i>');
+                isMinimized = false;
+            } else {
+                // When closing, save current size for next open
+                originalHeight = chatFloatContainer.css('height');
+                originalWidth = chatFloatContainer.css('width');
+            }
+        });
+
+        // Start dragging
+        chatHeader.on('mousedown', function(e) {
+            isDragging = true;
+            offsetX = e.clientX - chatFloatContainer.offset().left;
+            offsetY = e.clientY - chatFloatContainer.offset().top;
+            chatFloatContainer.css('cursor', 'grabbing');
+        });
+
+        // Dragging functionality
+        $(document).on('mousemove', function(e) {
+            if (!isDragging) return;
+            let newLeft = e.clientX - offsetX;
+            let newTop = e.clientY - offsetY;
+
+            // Keep within viewport (simple bounds check)
+            const viewportWidth = $(window).width();
+            const viewportHeight = $(window).height();
+
+            newLeft = Math.max(0, Math.min(newLeft, viewportWidth - chatFloatContainer.outerWidth()));
+            newTop = Math.max(0, Math.min(newTop, viewportHeight - chatFloatContainer.outerHeight()));
+
+
+            chatFloatContainer.css({
+                left: newLeft + 'px',
+                top: newTop + 'px',
+                right: 'auto',
+                bottom: 'auto'
+            });
+        });
+
+        // Stop dragging
+        $(document).on('mouseup', function() {
+            isDragging = false;
+            chatFloatContainer.css('cursor', 'grab');
+        });
+
+        // Minimize/Maximize Chat
+        minimizeChatButton.on('click', function() {
+            if (isMinimized) {
+                // Maximize
+                chatFloatContainer.css({height: originalHeight, width: originalWidth});
+                chatIframe.show();
+                minimizeChatButton.html('<i class="fas fa-window-minimize"></i>');
+            } else {
+                // Minimize
+                originalHeight = chatFloatContainer.css('height');
+                originalWidth = chatFloatContainer.css('width');
+                chatFloatContainer.css({height: '40px', width: '200px'}); /* Adjusted minimized height/width */
+                chatIframe.hide();
+                minimizeChatButton.html('<i class="fas fa-expand-alt"></i>');
+            }
+            isMinimized = !isMinimized;
+        });
+
+        // Close Chat
+        closeChatButton.on('click', function() {
+            chatFloatContainer.removeClass('chat-open');
+        });
+
+        // Set initial position and size for the floating container when page loads
+        $(window).on('load', function() {
+             chatFloatContainer.css({
+                'bottom': '30px',
+                'right': '30px',
+                'height': '500px',
+                'width': '350px'
+            });
+            originalHeight = '500px';
+            originalWidth = '350px';
+        });
+
+    });
+  </script>
+
+</body>
+</html>

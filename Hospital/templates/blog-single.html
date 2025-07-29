@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+    <section class="hero-wrap hero-wrap-2" style="background-image: url('{% static 'images/bg_1.jpg' %}');" data-stellar-background-ratio="0.5">
+      <div class="overlay"></div>
+      <div class="container">
+        <div class="row no-gutters slider-text align-items-center justify-content-center">
+          <div class="col-md-9 ftco-animate text-center">
+            <h1 class="mb-2 bread">{{ post.title }}</h1>
+            <p class="breadcrumbs"><span class="mr-2"><a href="{% url 'home' %}">Home <i class="ion-ios-arrow-forward"></i></a></span> <span class="mr-2"><a href="{% url 'blog' %}">Blog <i class="ion-ios-arrow-forward"></i></a></span> <span>{{ post.title }} <i class="ion-ios-arrow-forward"></i></span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ftco-section">
+      <div class="container">
+        <div class="row">
+          {# Main content column - col-lg-12 for full width #}
+          <div class="col-lg-12 ftco-animate">
+            <h2 class="mb-3">{{ post.title }}</h2>
+            {# Image display - w-100 class for explicit 100% width #}
+            <p>
+              {% if post.image %}
+                  <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid w-100">
+              {% else %}
+                  <img src="{% static 'images/default_blog_image.jpg' %}" alt="Default Blog Image" class="img-fluid w-100">
+              {% endif %}
+            </p>
+            <p>{{ post.content|safe }}</p>
+
+            <div class="tag-widget post-tag-container mb-5 mt-5">
+              <div class="tagcloud">
+                {# You might implement tags later based on your BlogPost model #}
+                <a href="#" class="tag-cloud-link">Medical</a>
+                <a href="#" class="tag-cloud-link">Health</a>
+                <a href="#" class="tag-cloud-link">Care</a>
+              </div>
+            </div>
+
+            <div class="about-author d-flex p-4 bg-light">
+              {# Author name only. Author image section removed. #}
+              <div class="desc">
+                <h3>{{ post.author }}</h3> {# Now post.author is just a string #}
+                <p>Date Posted: {{ post.date_posted|date:"F d, Y" }} at {{ post.date_posted|date:"h:i A" }}</p>
+
+              </div>
+            </div>
+
+            {# --- Start of Working Comment Section --- #}
+            <div class="pt-5 mt-5">
+              <h3 class="mb-5 h4 font-weight-bold">{{ comments.count }} Comments</h3>
+              <ul class="comment-list">
+                {% for comment in comments %}
+                <li class="comment">
+                  <div class="vcard bio">
+                    {# You might want a default comment image or user avatar here #}
+                    <img src="{% static 'images/avathar.png' %}" alt="Comment Author Image">
+                  </div>
+                  <div class="comment-body">
+                    {# Corrected Display author name using if/elif/else blocks #}
+                    <h3>
+                      {% if comment.author_name %}
+                        {{ comment.author_name }}
+                      {% elif comment.author %} {# Check if a logged-in author exists #}
+                        {{ comment.author.get_full_name|default:comment.author.username }}
+                      {% else %}
+                        Anonymous {# Fallback if no author_name and no logged-in author #}
+                      {% endif %}
+                    </h3>
+                    <div class="meta mb-2">{{ comment.date_posted|date:"F d, Y" }} at {{ comment.date_posted|date:"h:i A" }}</div>
+                    <p>{{ comment.content }}</p>
+                    {# Link to author's website if available and not empty #}
+                    {% if comment.website %}
+                      <p><a href="{{ comment.website }}" target="_blank" rel="noopener noreferrer">{{ comment.website }}</a></p>
+                    {% endif %}
+                    {# You can add a reply button here if you implement threaded comments #}
+                    {# <p><a href="#" class="reply">Reply</a></p> #}
+                  </div>
+                </li>
+                {% empty %}
+                <li class="p-3">No comments yet. Be the first to comment!</li>
+                {% endfor %}
+              </ul>
+              <div class="comment-form-wrap pt-5">
+                <h3 class="mb-5 h4 font-weight-bold">Leave a comment</h3>
+                <form action="" method="POST" class="p-5 bg-light">
+                    {% csrf_token %} {# CRITICAL for Django forms #}
+
+                    {% if request.user.is_authenticated %}
+                        <p>Commenting as: **{{ request.user.get_full_name|default:request.user.username }}** ({{ request.user.email|default:"No email" }})</p>
+                        {# For logged-in users, only the 'content' (message) field is shown. #}
+                        {# Name, Email, Website are handled by the associated user account. #}
+                        <div class="form-group">
+                            <label for="{{ comment_form.content.id_for_label }}">Message</label>
+                            {{ comment_form.content }}
+                            {% if comment_form.content.errors %}
+                                <div class="text-danger">{{ comment_form.content.errors }}</div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        {# Display name, email, and website fields for anonymous users #}
+                        <div class="form-group">
+                            <label for="{{ comment_form.author_name.id_for_label }}">Name *</label>
+                            {{ comment_form.author_name }}
+                            {% if comment_form.author_name.errors %}
+                                <div class="text-danger">{{ comment_form.author_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ comment_form.author_email.id_for_label }}">Email *</label>
+                            {{ comment_form.author_email }}
+                            {% if comment_form.author_email.errors %}
+                                <div class="text-danger">{{ comment_form.author_email.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ comment_form.website.id_for_label }}">Website</label>
+                            {{ comment_form.website }}
+                            {% if comment_form.website.errors %}
+                                <div class="text-danger">{{ comment_form.website.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ comment_form.content.id_for_label }}">Message</label>
+                            {{ comment_form.content }}
+                            {% if comment_form.content.errors %}
+                                <div class="text-danger">{{ comment_form.content.errors }}</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                  <div class="form-group">
+                    <input type="submit" value="Post Comment" class="btn py-3 px-4 btn-primary">
+                  </div>
+                  {# Display non-field errors if any #}
+                  {% if comment_form.non_field_errors %}
+                      <div class="text-danger">{{ comment_form.non_field_errors }}</div>
+                  {% endif %}
+                </form>
+              </div>
+            </div>
+            {# --- End of Working Comment Section --- #}
+
+          </div> {# End col-lg-12 #}
+
+          {# The entire sidebar div (col-lg-4) has been removed to make the main content full width #}
+
+        </div> {# End row #}
+      </div> {# End container #}
+    </section>
+
+{% endblock %}

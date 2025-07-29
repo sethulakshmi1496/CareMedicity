@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+    <section class="hero-wrap hero-wrap-2" style="background-image: url('{% static 'images/bg_1.jpg' %}');" data-stellar-background-ratio="0.5">
+      <div class="overlay"></div>
+      <div class="container">
+        <div class="row no-gutters slider-text align-items-center justify-content-center">
+          <div class="col-md-9 ftco-animate text-center">
+            <h1 class="mb-2 bread">Book an Appointment</h1>
+            <p class="breadcrumbs"><span class="mr-2"><a href="{% url 'home' %}">Home <i class="ion-ios-arrow-forward"></i></a></span> <span>Appointment <i class="ion-ios-arrow-forward"></i></span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ftco-section ftco-appointment">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="heading-section ftco-animate mb-5">
+                        <h2 class="mb-2">Book an Appointment</h2>
+                        <p>Fill out the form below to book your appointment.</p>
+                    </div>
+                    {% if messages %}
+                        <ul class="messages">
+                            {% for message in messages %}
+                                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    <form action="{% url 'appointment' %}" method="post" class="appointment-form ftco-animate">
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                              <div class="alert alert-danger">
+                                   {% for error in form.non_field_errors %}
+                                       <p>{{ error }}</p>
+                                   {% endfor %}
+                              </div>
+                        {% endif %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.doctor.label_tag }}
+                                    {{ form.doctor }}
+                                    {% if form.doctor.errors %}<div class="text-danger">{{ form.doctor.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.department.label_tag }}
+                                    {{ form.department }}
+                                    {% if form.department.errors %}<div class="text-danger">{{ form.department.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.appointment_date.label_tag }}
+                                    {{ form.appointment_date }}
+                                    {% if form.appointment_date.errors %}<div class="text-danger">{{ form.appointment_date.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.appointment_time.label_tag }}
+                                    {{ form.appointment_time }}
+                                    {% if form.appointment_time.errors %}<div class="text-danger">{{ form.appointment_time.errors }}</div>{% endif %}
+                                </div>
+                            </div>
+                            {# You can add hidden fields for patient if automatically set in view or if you pass it via form #}
+                        </div>
+                        <div class="form-group">
+                            <input type="submit" value="Book Appointment" class="btn btn-primary py-3 px-4">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock %}

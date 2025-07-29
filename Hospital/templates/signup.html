@@ -1,0 +1,32 @@
+{# medical/templates/signup.html #}
+
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %} {# IMPORTANT: Load crispy_forms_tags #}
+
+{% block content %}
+
+<section class="hero-wrap hero-wrap-2" style="background-image: url('{% static 'images/bg_1.jpg' %}');" data-stellar-background-ratio="0.5">
+  <div class="overlay"></div>
+  <div class="container">
+    <div class="row no-gutters slider-text align-items-center justify-content-center">
+      <div class="col-md-9 ftco-animate text-center">
+        <h1 class="mb-2 bread">Sign Up</h1>
+        <p class="breadcrumbs"><span class="mr-2"><a href="{% url 'home' %}">Home <i class="ion-ios-arrow-forward"></i></a></span> <span>Sign Up <i class="ion-ios-arrow-forward"></i></span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container w-50 border border-1 border-dark mt-5 mb-5 p-5">
+    <h1 class="text-center text-primary">  Please Register Here...</h1>
+    <form method="POST">
+
+      {% csrf_token %}
+
+       {{form|crispy}}
+  <input type="submit" class="btn btn-primary" style="width: 100%;">
+</form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <section class="hero-wrap hero-wrap-2" style="background-image: url('{% static 'images/bg_1.jpg' %}');" data-stellar-background-ratio="0.5">
+        <div class="overlay"></div>
+        <div class="container">
+            <div class="row no-gutters slider-text align-items-center justify-content-center">
+                <div class="col-md-9 ftco-animate text-center">
+                    <h1 class="mb-2 bread">Clinical Departments</h1>
+                    <p class="breadcrumbs">
+                        <span class="mr-2"><a href="{% url 'home' %}">Home <i class="ion-ios-arrow-forward"></i></a></span>
+                        <span>Department <i class="ion-ios-arrow-forward"></i></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="ftco-section">
+        <div class="container">
+            <div class="row justify-content-center mb-5 pb-2">
+                <div class="col-md-8 text-center heading-section ftco-animate">
+                    <span class="subheading">Departments</span>
+                    <h2 class="mb-4">Clinic Departments</h2>
+                    <p>Discover our specialized clinical departments, each committed to providing exceptional care tailored to your unique health needs. From comprehensive diagnostics to advanced treatments, our expert teams ensure your well-being is our top priority.</p>
+                </div>
+            </div>
+            <div class="ftco-departments">
+                <div class="row">
+                    <div class="col-md-12 nav-link-wrap">
+                        <div class="nav nav-pills d-flex text-center" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                            {% for department in departments %}
+                                <a class="nav-link ftco-animate {% if forloop.first %}active{% endif %}"
+                                   id="v-pills-{{ department.pk }}-tab" data-toggle="pill"
+                                   href="#v-pills-{{ department.pk }}" role="tab"
+                                   aria-controls="v-pills-{{ department.pk }}"
+                                   aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+                                    {{ department.name }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-12 tab-wrap">
+                        <div class="tab-content bg-light p-4 p-md-5 ftco-animate" id="v-pills-tabContent">
+                            {% for department in departments %}
+                                <div class="tab-pane py-2 fade {% if forloop.first %}show active{% endif %}"
+                                     id="v-pills-{{ department.pk }}" role="tabpanel"
+                                     aria-labelledby="v-pills-{{ department.pk }}-tab">
+                                    <div class="row departments">
+                                        <div class="col-lg-4 order-lg-last d-flex align-items-stretch">
+                                            {% if department.image %}
+                                                <div class="img d-flex align-self-stretch" style="background-image: url('{{ department.image.url }}');"></div>
+                                            {% else %}
+                                                {# Provide a default image if none is uploaded for the department #}
+                                                <div class="img d-flex align-self-stretch" style="background-image: url('{% static 'images/default_dept.jpg' %}');"></div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <h2>{{ department.name }} Department</h2>
+                                            <p>{{ department.description }}</p>
+                                            <div class="row mt-5 pt-2">
+                                                {% for service in department.services.all %}
+                                                    <div class="col-lg-6">
+                                                        <div class="services-2 d-flex">
+                                                            <div class="icon mt-2 mr-3 d-flex justify-content-center align-items-center">
+                                                                <span class="{{ service.icon_class }}"></span>
+                                                            </div>
+                                                            <div class="text">
+                                                                <h3>{{ service.title }}</h3>
+                                                                <p>{{ service.description }}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                {% empty %}
+                                                    <div class="col-12">
+                                                        <p>No services listed for this department yet.</p>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock content %}
+

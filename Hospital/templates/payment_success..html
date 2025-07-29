@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="ftco-section">
+  <div class="container text-center">
+    <h2 class="text-success">Payment Successful!</h2>
+    <p>Your appointment has been confirmed. Thank you.</p>
+    <a href="{% url 'home' %}" class="btn btn-primary mt-3">Go to Home</a>
+  </div>
+</section>
+{% endblock %}

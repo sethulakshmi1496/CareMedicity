@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="hero-wrap hero-wrap-2" style="background-image: url('{% static 'images/bg_1.jpg' %}');" data-stellar-background-ratio="0.5">
+  <div class="overlay"></div>
+  <div class="container">
+    <div class="row no-gutters slider-text align-items-center justify-content-center">
+      <div class="col-md-9 ftco-animate text-center">
+        <h1 class="mb-2 bread">My Profile</h1>
+        <p class="breadcrumbs"><span class="mr-2"><a href="{% url 'home' %}">Home <i class="ion-ios-arrow-forward"></i></a></span> <span>Profile <i class="ion-ios-arrow-forward"></i></span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ftco-section ftco-appointment">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8 ftco-animate">
+
+        <div class="heading-section text-center mb-5">
+          {% if mode == 'create_prompt' %}
+            <h2 class="mb-2 text-primary">Create Your Patient Profile</h2>
+            <p>You don't have a profile yet. Please create one to manage your appointments and details.</p>
+          {% elif mode == 'edit' %}
+            <h2 class="mb-2 text-primary">Edit Your Patient Profile</h2>
+            <p>Update your personal information below.</p>
+          {% elif mode == 'create_form' or mode == 'create_form_with_errors' %}
+            <h2 class="mb-2 text-primary">Complete Your Patient Profile</h2>
+            <p>Please fill out your profile details below.</p>
+            {% if mode == 'create_form_with_errors' %}
+              <p class="text-danger">Please correct the errors in the form.</p>
+            {% endif %}
+          {% elif mode == 'view' %}
+            <h2 class="mb-2 text-primary">Your Profile Details</h2>
+            <p>Here is your saved information.</p>
+          {% endif %}
+        </div>
+
+        {% if messages %}
+        <ul class="messages list-unstyled text-center">
+          {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if mode == 'create_prompt' %}
+          <div class="text-center p-4 p-md-5 bg-light rounded shadow-sm">
+            <a href="{% url 'my_profile' %}?action=create" class="btn btn-primary py-3 px-5">Create Profile</a>
+          </div>
+
+        {% elif mode == 'view' %}
+          <div class="p-4 p-md-5 bg-light rounded shadow-sm">
+            <div class="mb-3"><strong>Username:</strong> {{ user.username }}</div>
+            <div class="mb-3"><strong>Email:</strong> {{ user.email }}</div>
+            <div class="mb-3"><strong>First Name:</strong> {{ patient_profile.first_name }}</div>
+            <div class="mb-3"><strong>Last Name:</strong> {{ patient_profile.last_name }}</div>
+            <div class="mb-3"><strong>Date of Birth:</strong> {{ patient_profile.date_of_birth }}</div>
+            <div class="mb-3"><strong>Gender:</strong> {{ patient_profile.gender }}</div>
+            <div class="mb-3"><strong>Contact Number:</strong> {{ patient_profile.contact_number }}</div>
+            <div class="mb-3"><strong>Blood Group:</strong> {{ patient_profile.blood_group }}</div>
+            <div class="mb-3"><strong>Address:</strong> {{ patient_profile.address }}</div>
+
+            <div class="text-center mt-4">
+              <a href="{% url 'my_profile' %}?action=edit" class="btn btn-primary py-3 px-5">Update Profile</a>
+              <form action="{% url 'delete_profile' %}" method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete your profile? This action cannot be undone.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger py-3 px-5 ml-2">Delete Profile</button>
+              </form>
+            </div>
+          </div>
+
+        {% elif mode == 'edit' or mode == 'create_form' or mode == 'create_form_with_errors' %}
+          <div class="p-4 p-md-5 bg-light rounded shadow-sm">
+            <form method="post" id="patientProfileForm">
+              {% csrf_token %}
+              <div class="row mb-3">
+                <div class="col-md-6"><strong>Username:</strong></div>
+                <div class="col-md-6"><p class="form-control-plaintext">{{ user.username }}</p></div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-md-6"><strong>Email:</strong></div>
+                <div class="col-md-6"><p class="form-control-plaintext">{{ user.email }}</p></div>
+              </div>
+              <hr>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                    <input type="text" name="{{ form.first_name.name }}" id="{{ form.first_name.id_for_label }}" class="form-control" value="{{ form.first_name.value|default:'' }}" {% if form.first_name.field.required %}required{% endif %}>
+                    {% if form.first_name.errors %}<div class="text-danger">{{ form.first_name.errors }}</div>{% endif %}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                    <input type="text" name="{{ form.last_name.name }}" id="{{ form.last_name.id_for_label }}" class="form-control" value="{{ form.last_name.value|default:'' }}" {% if form.last_name.field.required %}required{% endif %}>
+                    {% if form.last_name.errors %}<div class="text-danger">{{ form.last_name.errors }}</div>{% endif %}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="{{ form.date_of_birth.id_for_label }}">{{ form.date_of_birth.label }}</label>
+                    <input type="date" name="{{ form.date_of_birth.name }}" id="{{ form.date_of_birth.id_for_label }}" class="form-control" value="{{ form.date_of_birth.value|date:'Y-m-d'|default:'' }}" {% if form.date_of_birth.field.required %}required{% endif %}>
+                    {% if form.date_of_birth.errors %}<div class="text-danger">{{ form.date_of_birth.errors }}</div>{% endif %}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="{{ form.gender.id_for_label }}">{{ form.gender.label }}</label>
+                    <select name="{{ form.gender.name }}" id="{{ form.gender.id_for_label }}" class="form-control" {% if form.gender.field.required %}required{% endif %}>
+                      <option value="">---------</option>
+                      {% for value, label in form.gender.field.choices %}
+                        <option value="{{ value }}" {% if value == form.gender.value %}selected{% endif %}>{{ label }}</option>
+                      {% endfor %}
+                    </select>
+                    {% if form.gender.errors %}<div class="text-danger">{{ form.gender.errors }}</div>{% endif %}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="{{ form.contact_number.id_for_label }}">{{ form.contact_number.label }}</label>
+                    <input type="text" name="{{ form.contact_number.name }}" id="{{ form.contact_number.id_for_label }}" class="form-control" value="{{ form.contact_number.value|default:'' }}" {% if form.contact_number.field.required %}required{% endif %}>
+                    {% if form.contact_number.errors %}<div class="text-danger">{{ form.contact_number.errors }}</div>{% endif %}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label for="{{ form.blood_group.id_for_label }}">{{ form.blood_group.label }}</label>
+                    <input type="text" name="{{ form.blood_group.name }}" id="{{ form.blood_group.id_for_label }}" class="form-control" value="{{ form.blood_group.value|default:'' }}" {% if form.blood_group.field.required %}required{% endif %}>
+                    {% if form.blood_group.errors %}<div class="text-danger">{{ form.blood_group.errors }}</div>{% endif %}
+                  </div>
+                </div>
+                <div class="col-md-12">
+                  <div class="form-group">
+                    <label for="{{ form.address.id_for_label }}">{{ form.address.label }}</label>
+                    <textarea name="{{ form.address.name }}" id="{{ form.address.id_for_label }}" class="form-control" rows="4" {% if form.address.field.required %}required{% endif %}>{{ form.address.value|default:'' }}</textarea>
+                    {% if form.address.errors %}<div class="text-danger">{{ form.address.errors }}</div>{% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary py-3 px-5">
+                  {% if patient_profile %}Update Profile{% else %}Create Profile{% endif %}
+                </button>
+              </div>
+            </form>
+
+            {% if patient_profile %}
+            <div class="text-center mt-3">
+              <form action="{% url 'delete_profile' %}" method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete your profile?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger py-3 px-5 ml-2">Delete Profile</button>
+              </form>
+            </div>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

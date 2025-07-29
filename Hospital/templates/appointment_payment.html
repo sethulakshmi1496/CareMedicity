@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="ftco-section">
+  <div class="container text-center">
+    <h2>Consultation Fee: ₹500</h2>
+    <form action="{% url 'appointment_payment_success' appointment.id %}" method="POST">
+      {% csrf_token %}
+      <script
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        data-key="rzp_test_oCeVyBXbBVFero"
+        data-amount="{{ payment.amount }}"
+        data-currency="INR"
+        data-order_id="{{ payment.id }}"
+        data-buttontext="Pay ₹500"
+        data-name="Hospital Appointment"
+        data-description="Doctor Consultation"
+
+        data-prefill.email="{{ user.email }}"
+        data-theme.color="#007bff">
+      </script>
+    </form>
+  </div>
+</section>
+{% endblock %}

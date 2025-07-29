@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Care Medicity Chatbot</title>
+
+    {# You might want to include a minimal set of CSS here for the chatbot's internal styling #}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 20px); /* Adjust for padding */
+        }
+        #chat-window {
+            flex-grow: 1;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .message {
+            max-width: 80%;
+            padding: 8px 12px;
+            border-radius: 15px;
+            word-wrap: break-word;
+        }
+        .user-message {
+            align-self: flex-end;
+            background-color: #dcf8c6; /* Light green for user messages */
+            color: #333;
+        }
+        .bot-message {
+            align-self: flex-start;
+            background-color: #e2e3e5; /* Light grey for bot messages */
+            color: #333;
+        }
+        /* Style for links within bot messages */
+        .bot-message a {
+            color: #1abc9c; /* Match your brand color for links */
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .bot-message a:hover {
+            text-decoration: underline;
+        }
+
+        #chat-input-container {
+            display: flex;
+            padding-top: 5px;
+        }
+        #user-input {
+            flex-grow: 1;
+            border-radius: 20px;
+            padding: 8px 15px;
+            border: 1px solid #ced4da;
+            margin-right: 5px;
+        }
+        #send-button {
+            background-color: #1abc9c; /* Care Medicity's green/teal */
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        #send-button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-window">
+        <div class="message bot-message">Hello! How can I help you today at Care Medicity?</div>
+    </div>
+    <div id="chat-input-container">
+        <input type="text" id="user-input" placeholder="Type your message...">
+        <button id="send-button"><i class="fas fa-paper-plane"></i></button>
+    </div>
+
+    {# Minimal jQuery is fine for this iframe #}
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            const chatWindow = $('#chat-window');
+            const userInput = $('#user-input');
+            const sendButton = $('#send-button');
+
+            // Function to get CSRF token from cookie (STANDARD DJANGO PRACTICE)
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            const csrftoken = getCookie('csrftoken'); // Get the CSRF token once
+
+            function appendMessage(sender, message) {
+                const messageClass = sender === 'user' ? 'user-message' : 'bot-message';
+                // Use .html() to allow for HTML tags like <a>
+                chatWindow.append(`<div class="message ${messageClass}">${message}</div>`);
+                chatWindow.scrollTop(chatWindow[0].scrollHeight); // Scroll to bottom
+            }
+
+            function sendMessage() {
+                const message = userInput.val().trim();
+                if (message) {
+                    appendMessage('user', message);
+                    userInput.val(''); // Clear input
+
+                    // Send message to Django backend API
+                    $.ajax({
+                        url: '/api/chatbot/', // Make sure this URL is correct as per your Hospital/urls.py
+                        method: 'POST', // Changed to POST to match your new ChatbotView
+                        data: JSON.stringify({ 'message': message }), // Send as JSON string
+                        contentType: 'application/json; charset=utf-8', // IMPORTANT: Specify JSON content type
+                        dataType: 'json', // Expect JSON response
+                        headers: {
+                            'X-CSRFToken': csrftoken // Include CSRF token for POST requests
+                        },
+                        success: function(response) {
+                            // The new ChatbotView returns {'response': chatbot_response_text}
+                            appendMessage('bot', response.response);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("AJAX Error:", status, error, xhr.responseText); // Log responseText for debugging
+                            appendMessage('bot', "Oops! Something went wrong. Please try again later. (Error: " + xhr.status + ")");
+                        }
+                    });
+                }
+            }
+
+            sendButton.on('click', sendMessage);
+            userInput.on('keypress', function(e) {
+                if (e.which === 13) { // Enter key
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
