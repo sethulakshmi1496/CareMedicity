@@ -55,3 +55,4 @@ wrapt==1.17.2
 gunicorn
 whitenoise
 dj-database-url
+python-dotenv
