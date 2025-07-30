@@ -11,6 +11,14 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os # Ensure os module is imported for environment variables
+import dj_database_url # Import dj_database_url for production database configuration
+from dotenv import load_dotenv # Import load_dotenv for local environment variables
+
+# Load environment variables from .env file in local development
+# This line should be at the very top of your settings.py
+# It will only load if .env file exists, and will be ignored in production on Render
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +28,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-089xeovi+as8v*4ehrddwm)$@e(^=)s7*!^gew)c5sr$$o(!r&'
+# Use environment variable for SECRET_KEY in production
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-089xeovi+as8v*4ehrddwm)$@e(^=)s7*!^gew)c5sr$$o(!r&')
+# The second argument is a fallback for local development if the env var isn't set.
+# Ensure you set DJANGO_SECRET_KEY on Render!
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-import os
+# Use environment variable for DEBUG. It should be False in production.
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
+
+# ALLOWED_HOSTS is good, using environment variable
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
+# For Render, DJANGO_ALLOWED_HOSTS will automatically be set by Render.
+# For local development, you might set it to 'localhost,127.0.0.1' or '*' for testing.
 
 
 # Application definition
@@ -36,11 +51,15 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles','medical','crispy_forms','crispy_bootstrap5',
+    'django.contrib.staticfiles',
+    'medical',
+    'crispy_forms',
+    'crispy_bootstrap5',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Add this line
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -50,7 +69,7 @@ MIDDLEWARE = [
 ]
 AUTH_USER_MODEL="medical.CustomUser"
 ROOT_URLCONF = 'Hospital.urls'
-import os
+
 LOGIN_URL="medical:signin"
 TEMPLATES = [
     {
@@ -70,12 +89,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'Hospital.wsgi.application'
 
 
+# Email settings for SMTP
+# Use environment variables for sensitive email credentials
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # Example: Gmail SMTP server
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'sethulakshmi1496@gmail.com'  # Your email address
-EMAIL_HOST_PASSWORD = 'uotu egcx yiox dlay'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'your_default_email@example.com') # Replace with a sensible default
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'your_default_app_password') # Replace with a sensible default
+# IMPORTANT: Never commit actual passwords. Use environment variables on Render.
 
 MEDIA_ROOT=os.path.join(BASE_DIR,'media')
 MEDIA_URL='/media/'
@@ -87,11 +109,13 @@ CRISPY_TEMPLATE_PACK="bootstrap5"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Use dj_database_url to configure the database from environment variable in production
+# Fallback to SQLite for local development when DATABASE_URL is not set
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
+        conn_max_age=600
+    )
 }
 
 
@@ -125,29 +149,18 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
+# Existing static files settings (ensure these are correct as per our previous discussion)
 STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS=[os.path.join(BASE_DIR,'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') # BASE_DIR is MEDICAL/Hospital/
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')] # This is correct for your structure
 
+# WhiteNoise configuration for production
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-
-
-
-
-
-
-
-
-
 
 
 LOGGING = {
@@ -173,12 +186,12 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'INFO', # Keep INFO for production, DEBUG for dev if needed
             'propagate': False,
         },
         'medical': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'DEBUG', # Keep DEBUG for your app's logs
             'propagate': False,
         },
     },
