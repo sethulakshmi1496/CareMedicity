@@ -1,4 +1,3 @@
-# medical/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.core.paginator import Paginator
@@ -11,11 +10,17 @@ from django.views.generic import DetailView
 from django.db import IntegrityError
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
+from django.urls.exceptions import NoReverseMatch  # IMPORTANT: Added this import
+
 import razorpay
 import json
+import os  # IMPORTANT: Added this import for path handling
+import random  # IMPORTANT: Added this import for random choices in bot responses
+
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.db.models import Q
 
 from .models import CustomUser, BlogPost, Department, Doctor, Patient, Appointment, DepartmentService
 from .forms import SignupForm, LoginForm, AppointmentForm, PatientProfileForm, CommentForm
@@ -23,30 +28,95 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 # --- Logging setup  ---
 import logging
+
 logger = logging.getLogger(__name__)
-
-
-import logging
-import os
-import random
-from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from django.views.decorators.clickjacking import xframe_options_exempt
-from django.db.models import Q
-
 
 # --- NLP Libraries  ---
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import LinearSVC
 import spacy
 
+# --- GLOBAL VARIABLES FOR LAZY LOADING ---
+# These will be None until the chatbot is first accessed in a worker process
+_lazy_hospital_nlp = None
+_lazy_hospital_intents = None
+_lazy_hospital_vectorizer = None
+_lazy_hospital_clf = None
 
-# --- Core Views ---
+
+def _load_hospital_bot_resources():
+    """
+    Loads the SpaCy NLP model and trains/loads the Hospital Bot components.
+    This function is designed to be called only when the bot is needed,
+    and it ensures the components are loaded only once per worker process.
+    """
+    global _lazy_hospital_nlp, _lazy_hospital_intents, _lazy_hospital_vectorizer, _lazy_hospital_clf
+
+    if _lazy_hospital_nlp is None:  # Only load if not already loaded in this worker
+        logger.info("INFO: Starting lazy load of SpaCy model and bot data.")
+
+        # --- SpaCy NLP Model Loading ---
+        try:
+            _lazy_hospital_nlp = spacy.load("en_core_web_sm")
+            logger.info("spaCy model 'en_core_web_sm' loaded successfully for Hospital Bot (lazy).")
+        except OSError:
+            logger.error(
+                "spaCy model 'en_core_web_sm' not found. Run 'python -m spacy download en_core_web_sm'. Bot functionality limited.")
+            _lazy_hospital_nlp = None
+        except Exception as e:
+            logger.error(f"An unexpected error occurred during lazy load of spaCy model: {e}", exc_info=True)
+            _lazy_hospital_nlp = None
+
+        # --- Chatbot Components Loading/Training ---
+        HOSPITAL_INTENTS_DATA_PATH = os.path.join(settings.BASE_DIR, 'medical', 'hospital_intents.json')
+        try:
+            with open(HOSPITAL_INTENTS_DATA_PATH, 'r', encoding='utf-8') as f:
+                _lazy_hospital_intents = json.load(f)
+            logger.info(
+                f"Hospital Bot intents loaded successfully from {HOSPITAL_INTENTS_DATA_PATH} (lazy). {len(_lazy_hospital_intents)} intents found.")
+
+            hospital_training_sentences = []
+            hospital_training_labels = []
+            for intent in _lazy_hospital_intents:
+                for pattern in intent['patterns']:
+                    hospital_training_sentences.append(pattern.lower())
+                    hospital_training_labels.append(intent['tag'])
+
+            if hospital_training_sentences:
+                _lazy_hospital_vectorizer = TfidfVectorizer()
+                X_train_hospital = _lazy_hospital_vectorizer.fit_transform(hospital_training_sentences)
+                _lazy_hospital_clf = LinearSVC()
+                _lazy_hospital_clf.fit(X_train_hospital, hospital_training_labels)
+                logger.info("Hospital Bot intent model trained successfully (lazy).")
+            else:
+                logger.warning(
+                    "WARNING: No training sentences found for Hospital Bot intents. Intent recognition will not work (lazy).")
+
+        except FileNotFoundError:
+            logger.error(
+                f"ERROR: {HOSPITAL_INTENTS_DATA_PATH} not found. Bot intent recognition will be limited (lazy).")
+            _lazy_hospital_intents = []
+        except json.JSONDecodeError as e:
+            logger.error(
+                f"ERROR: Could not decode JSON from {HOSPITAL_INTENTS_DATA_PATH}. Check file format. Error: {e} (lazy).")
+            _lazy_hospital_intents = []
+        except Exception as e:
+            logger.error(f"ERROR: An unexpected error occurred during Hospital Bot model loading/training (lazy): {e}",
+                         exc_info=True)
+            # Ensure components are None on error
+            _lazy_hospital_intents = []
+            _lazy_hospital_vectorizer = None
+            _lazy_hospital_clf = None
+
+    return _lazy_hospital_nlp, _lazy_hospital_intents, _lazy_hospital_vectorizer, _lazy_hospital_clf
+
+
+# --- Core Views (unchanged from your original code) ---
 
 class HomeView(View):
     def get(self, request):
         return render(request, 'Home.html')
+
 
 class AboutView(View):
     def get(self, request):
@@ -61,6 +131,7 @@ class BlogView(View):
         posts = paginator.get_page(page_number)
         context = {'posts': posts}
         return render(request, 'blog.html', context)
+
 
 class Blog_singleView(DetailView):
     model = BlogPost
@@ -96,15 +167,18 @@ class Blog_singleView(DetailView):
             context['comment_form'] = form
             return self.render_to_response(context)
 
+
 class ContactView(View):
     def get(self, request):
         return render(request, 'contact.html')
+
 
 class DepartmentView(View):
     def get(self, request):
         departments = Department.objects.all().order_by('name')
         context = {'departments': departments}
         return render(request, 'department.html', context)
+
 
 def department_service_view(request):
     # Fetch all departments and all services
@@ -117,15 +191,18 @@ def department_service_view(request):
     }
     return render(request, 'department.html', context)
 
+
 class DoctorView(View):
     def get(self, request):
         doctors = Doctor.objects.all().select_related('specialization')
         context = {'doctors': doctors}
         return render(request, 'doctor.html', context)
 
+
 class HighlightView(View):
     def get(self, request):
         return render(request, 'highlight.html')
+
 
 class SignupView(View):
     def post(self, request):
@@ -152,6 +229,7 @@ class SignupView(View):
         form_instance = SignupForm()
         return render(request, 'signup.html', {'form': form_instance})
 
+
 class OtpVerificationView(View):
     def post(self, request):
         otp = request.POST.get('otp')
@@ -174,6 +252,7 @@ class OtpVerificationView(View):
     def get(self, request):
         return render(request, 'otp_verify.html')
 
+
 class SigninView(View):
     def post(self, request):
         logger.info("--- SigninView POST called ---")
@@ -193,16 +272,16 @@ class SigninView(View):
 
                     if user.is_superuser or user.is_staff:
                         messages.success(request, f"Welcome, Admin {user.username}!")
-                        return redirect('home') # Or your admin's home
+                        return redirect('home')  # Or your admin's home
                     elif hasattr(user, 'doctor_profile'):
                         messages.success(request, f"Welcome, Dr. {user.first_name}!")
-                        return redirect('home') # Doctor's dashboard
+                        return redirect('home')  # Doctor's dashboard
                     elif hasattr(user, 'patient_profile'):
                         messages.success(request, f"Welcome, {user.first_name}!")
-                        return redirect('home') # Patient's dashboard
+                        return redirect('home')  # Patient's dashboard
                     else:
                         messages.success(request, f"Welcome, {user.username}!")
-                        return redirect('home') # Default if no specific profile
+                        return redirect('home')  # Default if no specific profile
                 else:
                     logger.warning(f"User {user.username} is not active.")
                     messages.warning(request, "Your account is not active. Please verify your OTP.")
@@ -231,13 +310,12 @@ class SigninView(View):
         form_instance = LoginForm()
         return render(request, 'login.html', {'form': form_instance})
 
+
 class SignOutView(View):
     def get(self, request):
         logout(request)
         messages.info(request, "You have been successfully logged out.")
         return redirect('signin')
-
-
 
 
 class MyAppointmentsView(LoginRequiredMixin, View):
@@ -246,7 +324,6 @@ class MyAppointmentsView(LoginRequiredMixin, View):
     def get(self, request):
         user = request.user
         logger.debug(f"MyAppointmentsView: User {user.username} ({user.id}) attempting to access.")
-
 
         if user.is_superuser or user.is_staff:
             logger.debug(f"MyAppointmentsView: User is admin/staff, redirecting to all_appointments_dashboard.")
@@ -262,14 +339,16 @@ class MyAppointmentsView(LoginRequiredMixin, View):
             logger.debug(f"MyAppointmentsView: User {user.username} has patient profile. Fetching appointments.")
             patient = user.patient_profile
 
-            appointments = Appointment.objects.filter(patient=patient).order_by('-appointment_date', '-appointment_time')
+            appointments = Appointment.objects.filter(patient=patient).order_by('-appointment_date',
+                                                                                '-appointment_time')
             context = {
                 'appointments': appointments,
                 'dashboard_title': 'My Appointments'
             }
             return render(request, self.template_name, context)
         else:
-            logger.debug(f"MyAppointmentsView: User {user.username} no patient profile found. Redirecting to my_profile.")
+            logger.debug(
+                f"MyAppointmentsView: User {user.username} no patient profile found. Redirecting to my_profile.")
             messages.warning(request, "Please complete your patient profile to view appointments.")
             return redirect('my_profile')
 
@@ -281,7 +360,6 @@ class DoctorAppointmentsView(LoginRequiredMixin, View):
         user = request.user
         logger.debug(f"DoctorAppointmentsView: User {user.username} ({user.id}) attempting to access.")
 
-
         if user.is_superuser or user.is_staff:
             logger.debug(f"DoctorAppointmentsView: User is admin/staff, redirecting to all_appointments_dashboard.")
             messages.info(request, "Redirecting to admin dashboard.")
@@ -291,13 +369,14 @@ class DoctorAppointmentsView(LoginRequiredMixin, View):
             messages.info(request, "Redirecting to your patient appointments.")
             return redirect('my_appointments')
 
-
         if hasattr(user, 'doctor_profile') and user.doctor_profile:
             doctor = user.doctor_profile
 
-            logger.debug(f"DoctorAppointmentsView: User {user.username} has doctor profile (ID: {doctor.id}, Name: {doctor.user.get_full_name() if doctor.user else 'N/A'}). Filtering appointments for this doctor.")
+            logger.debug(
+                f"DoctorAppointmentsView: User {user.username} has doctor profile (ID: {doctor.id}, Name: {doctor.user.get_full_name() if doctor.user else 'N/A'}). Filtering appointments for this doctor.")
             appointments = Appointment.objects.filter(doctor=doctor).order_by('-appointment_date', '-appointment_time')
-            logger.debug(f"DoctorAppointmentsView: Found {appointments.count()} appointments for doctor {doctor.user.username}.")
+            logger.debug(
+                f"DoctorAppointmentsView: Found {appointments.count()} appointments for doctor {doctor.user.username}.")
             context = {
                 'appointments': appointments,
                 'dashboard_title': f"Appointments for Dr. {user.first_name} {user.last_name}"
@@ -339,7 +418,6 @@ class AllAppointmentsView(LoginRequiredMixin, UserPassesTestMixin, View):
         user = request.user
         logger.debug(f"AllAppointmentsView: User {user.username} ({user.id}) accessing (passed test_func).")
 
-
         if hasattr(user, 'doctor_profile') and not (user.is_superuser or user.is_staff):
             messages.info(request, "Redirecting to doctor's appointments.")
             return redirect('doctor_appointments_dashboard')
@@ -347,15 +425,12 @@ class AllAppointmentsView(LoginRequiredMixin, UserPassesTestMixin, View):
             messages.info(request, "Redirecting to your patient appointments.")
             return redirect('my_appointments')
 
-
         appointments = Appointment.objects.all().order_by('-appointment_date', '-appointment_time')
         context = {
             'appointments': appointments,
             'dashboard_title': 'All Appointments (Admin View)'
         }
         return render(request, self.template_name, context)
-
-
 
 
 class MyProfileView(LoginRequiredMixin, View):
@@ -420,6 +495,7 @@ class MyProfileView(LoginRequiredMixin, View):
             }
             return render(request, self.template_name, context)
 
+
 class DeleteProfileView(LoginRequiredMixin, View):
     def post(self, request):
         if hasattr(request.user, 'patient_profile') and request.user.patient_profile:
@@ -430,8 +506,8 @@ class DeleteProfileView(LoginRequiredMixin, View):
         return redirect('my_profile')
 
 
-
 razorpay_client = razorpay.Client(auth=("rzp_test_oCeVyBXbBVFero", "fx3Z2TYQfYCbSSY77AQ5C0QY"))
+
 
 class AppointmentView(View):
     def get(self, request):
@@ -495,10 +571,7 @@ class AppointmentPaymentSuccessView(View):
 class DeleteAppointmentView(LoginRequiredMixin, View):
     def post(self, request, pk):
         appointment = get_object_or_404(Appointment, pk=pk)
-
-
         try:
-
             appointment.delete()
             messages.success(request, f"Appointment (ID: {pk}) successfully deleted.")
         except Exception as e:
@@ -509,70 +582,11 @@ class DeleteAppointmentView(LoginRequiredMixin, View):
             return redirect('all_appointments_dashboard')
         elif hasattr(user, 'doctor_profile'):
             return redirect('doctor_appointments_dashboard')
-        else: # Assumed patient or other user
+        else:  # Assumed patient or other user
             return redirect('my_appointments')
 
 
-
-logger = logging.getLogger(__name__)
-
-# SpaCy NLP Model Loading (Global Scope)
-hospital_nlp = None
-try:
-    hospital_nlp = spacy.load("en_core_web_sm")
-    logger.info("spaCy model 'en_core_web_sm' loaded successfully for Hospital Bot.")
-except OSError:
-    logger.error(
-        "spaCy model 'en_core_web_sm' not found for Hospital Bot. Please run 'python -m spacy download en_core_web_sm'")
-    hospital_nlp = None
-except Exception as e:
-    logger.error(f"An unexpected error occurred while loading spaCy model: {e}")
-    hospital_nlp = None
-
-
-# Chatbot
-HOSPITAL_INTENTS_DATA_PATH = os.path.join(settings.BASE_DIR, 'medical', 'hospital_intents.json')
-hospital_intents = []
-hospital_vectorizer = None
-hospital_clf = None
-
-try:
-    with open(HOSPITAL_INTENTS_DATA_PATH, 'r', encoding='utf-8') as f:
-        hospital_intents = json.load(f)
-    logger.info(
-        f"Hospital Bot intents loaded successfully from {HOSPITAL_INTENTS_DATA_PATH}. {len(hospital_intents)} intents found.")
-
-    hospital_training_sentences = []
-    hospital_training_labels = []
-    for intent in hospital_intents:
-        for pattern in intent['patterns']:
-            hospital_training_sentences.append(pattern.lower())
-            hospital_training_labels.append(intent['tag'])
-
-    if hospital_training_sentences:
-        hospital_vectorizer = TfidfVectorizer()
-        X_train_hospital = hospital_vectorizer.fit_transform(hospital_training_sentences)
-        hospital_clf = LinearSVC()
-        hospital_clf.fit(X_train_hospital, hospital_training_labels)
-        logger.info("Hospital Bot intent model trained successfully.")
-    else:
-        logger.warning(
-            "WARNING: No training sentences found for Hospital Bot intents. Intent recognition will not work.")
-
-except FileNotFoundError:
-    logger.error(f"ERROR: {HOSPITAL_INTENTS_DATA_PATH} not found. Hospital Bot intent recognition will be limited.")
-    hospital_intents = []
-except json.JSONDecodeError as e:
-    logger.error(f"ERROR: Could not decode JSON from {HOSPITAL_INTENTS_DATA_PATH}. Check file format. Error: {e}")
-    hospital_intents = []
-except Exception as e:
-    logger.error(f"ERROR: An unexpected error occurred during Hospital Bot model loading/training: {e}")
-    import traceback
-
-    traceback.print_exc()
-
-
-
+# --- Your existing get_safe_reverse_url function (now placed before bot logic) ---
 def get_safe_reverse_url(url_name, *args, **kwargs):
     """
     Safely attempts to reverse a URL name.
@@ -585,21 +599,22 @@ def get_safe_reverse_url(url_name, *args, **kwargs):
         return "#"
 
 
-
+# --- Modified _get_hospital_bot_response_logic to use lazy-loaded components ---
 def _get_hospital_bot_response_logic(user_message_str):
+    # Retrieve the lazily loaded components
+    nlp_model, intents_data, vectorizer, clf = _load_hospital_bot_resources()
+
     user_message_lower = user_message_str.lower().strip()
-
     predicted_tag = "fallback"
-
     confidence_threshold = -0.5
 
-    if hospital_clf and hospital_vectorizer:
-        user_message_vectorized = hospital_vectorizer.transform([user_message_lower])
-        confidence_scores = hospital_clf.decision_function(user_message_vectorized)
+    if clf and vectorizer and intents_data:  # Ensure components are loaded
+        user_message_vectorized = vectorizer.transform([user_message_lower])
+        confidence_scores = clf.decision_function(user_message_vectorized)
         if confidence_scores.size > 0:
             max_score_index = confidence_scores[0].argmax()
             highest_confidence = confidence_scores[0][max_score_index]
-            potential_tag = hospital_clf.classes_[max_score_index]
+            potential_tag = clf.classes_[max_score_index]
 
             logger.debug(
                 f"Hospital Bot DEBUG: Potential tag: {potential_tag}, Highest Confidence Score: {highest_confidence:.2f}")
@@ -614,6 +629,7 @@ def _get_hospital_bot_response_logic(user_message_str):
         logger.debug(f"Predicted intent after threshold: {predicted_tag} for message: '{user_message_lower}'")
     else:
         logger.warning("WARNING: Hospital Bot model not loaded/trained. Falling back to simple keyword matching.")
+        # Your existing fallback logic (keep as is)
         if any(kw in user_message_lower for kw in ["hi", "hello", "hey"]):
             predicted_tag = "greeting"
         elif any(kw in user_message_lower for kw in ["bye", "goodbye", "see you"]):
@@ -637,13 +653,13 @@ def _get_hospital_bot_response_logic(user_message_str):
         elif any(kw in user_message_lower for kw in ["about", "what can you do", "who are you"]):
             predicted_tag = "about_bot"
 
-
     response_text = "I'm sorry, I couldn't find a suitable response. Can you rephrase that?"
 
+    # Ensure intents_data is used here if it's the source for intents
     if predicted_tag in ["greeting", "farewell", "thanks", "hospital_address", "hospital_contact",
                          "operating_hours", "consultation_fee", "about_hospital",
                          "about_bot", "symptom_advice", "fallback"]:
-        for intent in hospital_intents:
+        for intent in (intents_data if intents_data else []):  # Use intents_data, fallback to empty list
             if intent['tag'] == predicted_tag:
                 return random.choice(intent['responses'])
 
@@ -670,8 +686,8 @@ def _get_hospital_bot_response_logic(user_message_str):
             else:
                 return "I'm sorry, I don't have information on specific departments right now. Please check our 'Departments' page."
 
-        if hospital_nlp:
-            doc = hospital_nlp(user_message_lower)
+        if nlp_model:  # Use nlp_model here
+            doc = nlp_model(user_message_lower)
             potential_department_names = []
 
             for ent in doc.ents:
@@ -722,8 +738,8 @@ def _get_hospital_bot_response_logic(user_message_str):
         found_doctor_obj = None
         user_message_lower = user_message_str.lower().strip()
 
-        if hospital_nlp:
-            doc = hospital_nlp(user_message_lower)
+        if nlp_model:  # Use nlp_model here
+            doc = nlp_model(user_message_lower)
             potential_names = []
 
             for ent in doc.ents:
@@ -775,10 +791,8 @@ def _get_hospital_bot_response_logic(user_message_str):
             qualification = f"Qualification: {found_doctor_obj.qualification}." if hasattr(found_doctor_obj,
                                                                                            'qualification') else ''
 
-
             doctor_detail_url = get_safe_reverse_url('doctor_detail', args=[found_doctor_obj.id])
             if doctor_detail_url == "#":
-
                 doctor_detail_url = get_safe_reverse_url('doctor')
 
             return (f"{full_doctor_name} is a {specialization}. {experience} {qualification} "
@@ -796,8 +810,9 @@ def _get_hospital_bot_response_logic(user_message_str):
             else:
 
                 doctors_list_url = get_safe_reverse_url('doctor')
-                return (f"I'm sorry, I don't have information on {specialization_match} specialists at the moment, or that specialization is not listed. "
-                        f"Please check our <a href='{doctors_list_url}' target='_parent'>Doctors page</a>.")
+                return (
+                    f"I'm sorry, I don't have information on {specialization_match} specialists at the moment, or that specialization is not listed. "
+                    f"Please check our <a href='{doctors_list_url}' target='_parent'>Doctors page</a>.")
         else:
             doctors = Doctor.objects.all().select_related('specialization')
             if doctors.exists():
@@ -830,7 +845,7 @@ def _get_hospital_bot_response_logic(user_message_str):
         if user_message_lower in general_listing_phrases:
             is_general_query = True
         elif any(phrase in user_message_lower for phrase in general_listing_phrases if len(phrase) > 1):
-             is_general_query = True
+            is_general_query = True
         elif "what are your" in user_message_lower and "service" in user_message_lower:
             is_general_query = True
 
@@ -846,8 +861,8 @@ def _get_hospital_bot_response_logic(user_message_str):
             else:
                 return "I'm sorry, I don't have information on specific services right now. Please check our 'Department Services' page."
 
-        if hospital_nlp:
-            doc = hospital_nlp(user_message_lower)
+        if nlp_model:  # Use nlp_model here
+            doc = nlp_model(user_message_lower)
             potential_terms = [ent.text.lower() for ent in doc.ents if ent.label_ in ["ORG", "NORP", "PRODUCT"]] + \
                               [token.lemma_.lower() for token in doc if token.pos_ in ["NOUN", "PROPN"]]
             potential_terms = list(set(potential_terms))
@@ -863,11 +878,12 @@ def _get_hospital_bot_response_logic(user_message_str):
             if not found_service_obj:
                 for service in DepartmentService.objects.all():
                     if user_message_lower == service.title.lower() or \
-                       (user_message_lower in service.title.lower() and len(user_message_lower) > 3) or \
-                       (service.title.lower() in user_message_lower and len(service.title.lower()) > 3):
+                            (user_message_lower in service.title.lower() and len(user_message_lower) > 3) or \
+                            (service.title.lower() in user_message_lower and len(service.title.lower()) > 3):
                         found_service_obj = service
                         break
-                    if not found_service_obj and user_message_lower in service.description.lower() and len(user_message_lower) > 3:
+                    if not found_service_obj and user_message_lower in service.description.lower() and len(
+                            user_message_lower) > 3:
                         found_service_obj = service
                         break
 
@@ -891,9 +907,10 @@ def _get_hospital_bot_response_logic(user_message_str):
     elif predicted_tag == "user_profile_query":
 
         patient_portal_url = get_safe_reverse_url('my_profile')
-        return ("I am an AI chatbot and cannot access your personal profile or appointment details directly for security and privacy reasons. "
-                "Please log in to your patient portal on our website "
-                f"<a href='{patient_portal_url}' target='_parent'>here</a> to view your information.")
+        return (
+            "I am an AI chatbot and cannot access your personal profile or appointment details directly for security and privacy reasons. "
+            "Please log in to your patient portal on our website "
+            f"<a href='{patient_portal_url}' target='_parent'>here</a> to view your information.")
 
     return response_text
 
@@ -910,6 +927,12 @@ class ChatbotView(View):
             user_message = data.get('message', '')
             logger.info(f"Hospital Bot: Received message from user: '{user_message}'")
 
+            # !!! HERE IS THE KEY CHANGE !!!
+            # Call the lazy loading function right before you use the bot logic
+            # This ensures the bot is loaded only when the chatbot API is hit.
+            nlp_model, intents_data, vectorizer, clf = _load_hospital_bot_resources()
+
+            # Pass the loaded components to your response logic
             chatbot_response_text = _get_hospital_bot_response_logic(user_message)
 
             logger.info(f"Hospital Bot: Generated response: '{chatbot_response_text}'")
